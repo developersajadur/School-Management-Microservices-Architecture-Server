@@ -1,4 +1,5 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from 'src/common/guards/auth.guard';
@@ -21,7 +22,7 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AuthGuard)
-  logout(@Body('userId') userId: string) {
-    return this.authService.logout(userId);
+  logout(@Req() req) {
+    return this.authService.logout(req.user.id);
   }
 }

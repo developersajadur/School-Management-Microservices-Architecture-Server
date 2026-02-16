@@ -141,8 +141,9 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string) {
-    await this.redisService.del(`refresh_token:${userId}`);
+  async logout(id: string) {
+    console.log(id);
+    await this.redisService.del(`refresh_token:${id}`);
     return { message: 'Logged out successfully' };
   }
 }
