@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 // import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { StudentModule } from './student/student.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { StudentModule } from './student/student.module';
     // UserModule,
     AuthModule,
     StudentModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],

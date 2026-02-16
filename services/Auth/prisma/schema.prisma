@@ -32,14 +32,13 @@ enum StudentStatus {
   GRADUATED
 }
 
-
 model User {
-  id         String     @id @default(uuid())
-  email      String     @unique
-  phone      String?    @unique
-  password   String     @db.Text
-  role       Role
-  status     UserStatus @default(ACTIVE)
+  id       String     @id @default(uuid())
+  email    String     @unique
+  phone    String?    @unique
+  password String     @db.Text
+  role     Role
+  status   UserStatus @default(ACTIVE)
 
   failedAttempts Int       @default(0)
   lockedUntil    DateTime?
@@ -84,7 +83,6 @@ model Student {
   @@map("students")
 }
 
-
 model Teacher {
   id            String   @id @default(uuid())
   userId        String   @unique
@@ -107,11 +105,10 @@ model Teacher {
 }
 
 model StudentCounter {
-  id        Int    @id @default(1)
-  year      Int
-  sequence  Int    @default(0)
+  id       Int @id @default(1)
+  year     Int
+  sequence Int @default(0)
 }
-
 
 model PasswordResetToken {
   id        String   @id @default(uuid())

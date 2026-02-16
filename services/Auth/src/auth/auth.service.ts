@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   forwardRef,
@@ -7,45 +10,139 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
+import { User, UserStatus } from '@prisma/client';
 import { comparePasswords } from 'src/common/password/password.hash';
 import { UserService } from 'src/user/user.service';
+import { jwt } from 'src/config';
+import { RedisService } from 'src/redis/redis.service';
+import * as bcrypt from 'bcrypt';
+import { StringValue } from 'ms';
 
 @Injectable()
 export class AuthService {
+  [x: string]: any;
   constructor(
-    private readonly wtService: JwtService,
+    private readonly jwtService: JwtService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
+    private readonly redisService: RedisService,
   ) {}
-  // async login(email: string, password: string): Promise<any> {
-  //   const user = (await this.userService.getUserByEmailForLogin(email)) as User;
-  //   if (!user) {
-  //     throw new UnauthorizedException('User not found');
-  //   } else if (user.isBlocked) {
-  //     throw new UnauthorizedException('User is blocked');
-  //   } else if (user.isDeleted) {
-  //     throw new NotFoundException('User not found');
-  //   }
 
-  //   const isPasswordValid = await comparePasswords(password, user.password);
-  //   if (!isPasswordValid) {
-  //     throw new UnauthorizedException('Invalid credentials');
-  //   }
+  async login(email: string, password: string) {
+    const user = await this.userService.findByEmail(email);
 
-  //   const payload = {
-  //     userId: user.id,
-  //     email: user.email,
-  //     role: user.role,
-  //   };
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-  //   const token = this.wtService.sign(payload);
-  //   const { password: __, ...safeUser } = user;
+    if (user.status !== UserStatus.ACTIVE) {
+      throw new UnauthorizedException('Account not active');
+    }
 
-  //   return {
-  //     message: 'Login successful',
-  //     token,
-  //     user: safeUser,
-  //   };
-  // }
+    const isPasswordValid = await comparePasswords(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload = {
+      userId: user.id,
+      role: user.role,
+    };
+
+    // Access Token
+    const accessToken = this.jwtService.sign(payload, {
+      secret: jwt.accessSecret,
+      expiresIn: jwt.accessExpiresIn as StringValue,
+    });
+
+    // Refresh Token
+    const refreshToken = this.jwtService.sign(
+      { userId: user.id },
+      {
+        secret: jwt.refreshSecret,
+        expiresIn: jwt.refreshExpiresIn as StringValue,
+      },
+    );
+
+    //  Hash refresh token before storing
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+
+    // Store in Redis with TTL
+    await this.redisService.set(
+      `refresh_token:${user.id}`,
+      hashedRefreshToken,
+      7 * 24 * 60 * 60, // seconds (7 days)
+    );
+
+    return {
+      message: 'Login successful',
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async refresh(oldRefreshToken: string) {
+    try {
+      const decoded = this.jwtService.verify(oldRefreshToken, {
+        secret: jwt.refreshSecret,
+      });
+
+      const userId = decoded.userId;
+
+      const storedToken = await this.redisService.get(
+        `refresh_token:${userId}`,
+      );
+
+      if (!storedToken) {
+        throw new UnauthorizedException('Session expired');
+      }
+
+      const isMatch = await bcrypt.compare(oldRefreshToken, storedToken);
+
+      if (!isMatch) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // ROTATION — delete old
+      await this.redisService.del(`refresh_token:${userId}`);
+
+      // Generate new tokens
+      const newAccessToken = this.jwtService.sign(
+        { userId },
+        {
+          secret: jwt.accessSecret,
+          expiresIn: jwt.accessExpiresIn as StringValue,
+        },
+      );
+
+      const newRefreshToken = this.jwtService.sign(
+        { userId },
+        {
+          secret: jwt.refreshSecret,
+          expiresIn: jwt.refreshExpiresIn as StringValue,
+        },
+      );
+
+      const hashedNewRefreshToken = await bcrypt.hash(newRefreshToken, 10);
+
+      await this.redisService.set(
+        `refresh_token:${userId}`,
+        hashedNewRefreshToken,
+        7 * 24 * 60 * 60,
+      );
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  async logout(userId: string) {
+    await this.redisService.del(`refresh_token:${userId}`);
+    return { message: 'Logged out successfully' };
+  }
 }

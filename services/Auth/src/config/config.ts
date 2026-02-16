@@ -16,6 +16,13 @@ export const database = {
 
 export const databaseUrl = getEnv('DATABASE_URL');
 export const jwt = {
-  secret: getEnv('JWT_SECRET'),
-  expiresIn: getEnv('JWT_EXPIRES_IN'),
+  accessSecret: getEnv('JWT_ACCESS_SECRET'),
+  accessExpiresIn: getEnv('JWT_ACCESS_EXPIRES_IN'),
+  refreshSecret: getEnv('JWT_REFRESH_SECRET'),
+  refreshExpiresIn: getEnv('JWT_REFRESH_EXPIRES_IN'),
+};
+
+export const redis = {
+  host: getEnv('REDIS_HOST'),
+  port: getEnvNumber('REDIS_PORT'),
 };

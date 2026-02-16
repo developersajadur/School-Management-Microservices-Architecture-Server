@@ -34,6 +34,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "helmet": "^8.1.0",
+    "ioredis": "^5.9.3",
     "prisma": "^7.3.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
