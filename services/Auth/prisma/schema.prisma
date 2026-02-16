@@ -106,6 +106,12 @@ model Teacher {
   @@map("teachers")
 }
 
+model StudentCounter {
+  id        Int    @id @default(1)
+  year      Int
+  sequence  Int    @default(0)
+}
+
 
 model PasswordResetToken {
   id        String   @id @default(uuid())

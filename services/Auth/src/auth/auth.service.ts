@@ -18,34 +18,34 @@ export class AuthService {
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
   ) {}
-  async login(email: string, password: string): Promise<any> {
-    const user = (await this.userService.getUserByEmailForLogin(email)) as User;
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    } else if (user.isBlocked) {
-      throw new UnauthorizedException('User is blocked');
-    } else if (user.isDeleted) {
-      throw new NotFoundException('User not found');
-    }
+  // async login(email: string, password: string): Promise<any> {
+  //   const user = (await this.userService.getUserByEmailForLogin(email)) as User;
+  //   if (!user) {
+  //     throw new UnauthorizedException('User not found');
+  //   } else if (user.isBlocked) {
+  //     throw new UnauthorizedException('User is blocked');
+  //   } else if (user.isDeleted) {
+  //     throw new NotFoundException('User not found');
+  //   }
 
-    const isPasswordValid = await comparePasswords(password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+  //   const isPasswordValid = await comparePasswords(password, user.password);
+  //   if (!isPasswordValid) {
+  //     throw new UnauthorizedException('Invalid credentials');
+  //   }
 
-    const payload = {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    };
+  //   const payload = {
+  //     userId: user.id,
+  //     email: user.email,
+  //     role: user.role,
+  //   };
 
-    const token = this.wtService.sign(payload);
-    const { password: __, ...safeUser } = user;
+  //   const token = this.wtService.sign(payload);
+  //   const { password: __, ...safeUser } = user;
 
-    return {
-      message: 'Login successful',
-      token,
-      user: safeUser,
-    };
-  }
+  //   return {
+  //     message: 'Login successful',
+  //     token,
+  //     user: safeUser,
+  //   };
+  // }
 }
