@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { forwardRef, Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -9,10 +9,11 @@ import { RedisModule } from 'src/redis/redis.module';
 import { jwt } from 'src/config';
 import { StringValue } from 'ms';
 
+@Global()
 @Module({
   imports: [
     JwtModule.register({
-      secret: jwt.accessSecret, // default for access token
+      secret: jwt.accessSecret,
       signOptions: {
         expiresIn: jwt.accessExpiresIn as StringValue,
       },

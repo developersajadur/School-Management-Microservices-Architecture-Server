@@ -4,10 +4,10 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
-// import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { StudentModule } from './student/student.module';
 import { RedisModule } from './redis/redis.module';
+import { TeacherModule } from './teacher/teacher.module';
 
 @Module({
   imports: [
@@ -18,6 +18,7 @@ import { RedisModule } from './redis/redis.module';
     // UserModule,
     AuthModule,
     StudentModule,
+    TeacherModule,
     RedisModule,
   ],
   controllers: [AppController],

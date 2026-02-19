@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  BadRequestException,
+  ForbiddenException,
   forwardRef,
   Inject,
   Injectable,
@@ -10,13 +11,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User, UserStatus } from '@prisma/client';
+import { Role, User, UserStatus } from '@prisma/client';
 import { comparePasswords } from 'src/common/password/password.hash';
 import { UserService } from 'src/user/user.service';
 import { jwt } from 'src/config';
 import { RedisService } from 'src/redis/redis.service';
 import * as bcrypt from 'bcrypt';
 import { StringValue } from 'ms';
+import { admin as adminConfig, bcryptSaltRounds } from 'src/config/config';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +29,7 @@ export class AuthService {
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly redisService: RedisService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async login(email: string, password: string) {
@@ -145,5 +149,44 @@ export class AuthService {
     console.log(id);
     await this.redisService.del(`refresh_token:${id}`);
     return { message: 'Logged out successfully' };
+  }
+
+  // Utility method to seed admin from environment variables
+  async seedAdminFromEnv() {
+    if (process.env.NODE_ENV === 'production') {
+      throw new ForbiddenException('Seeding not allowed in production');
+    }
+
+    const adminEmail = adminConfig.email;
+    const adminPassword = adminConfig.password;
+    const saltRounds = bcryptSaltRounds;
+
+    if (!adminEmail || !adminPassword) {
+      throw new BadRequestException('Admin env variables missing');
+    }
+
+    const existingAdmin = await this.prisma.user.findFirst({
+      where: { role: Role.ADMIN },
+    });
+
+    if (existingAdmin) {
+      return { message: 'Admin already exists' };
+    }
+
+    const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
+
+    const admin = await this.prisma.user.create({
+      data: {
+        email: adminEmail,
+        password: hashedPassword,
+        role: Role.ADMIN,
+        status: UserStatus.ACTIVE,
+      },
+    });
+
+    return {
+      message: 'Admin seeded successfully',
+      adminId: admin.id,
+    };
   }
 }

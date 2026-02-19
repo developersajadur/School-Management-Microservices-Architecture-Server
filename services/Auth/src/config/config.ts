@@ -12,9 +12,9 @@ export const database = {
   user: getEnv('DATABASE_USER'),
   password: getEnv('DATABASE_PASSWORD'),
   name: getEnv('DATABASE_NAME'),
+  databaseUrl: getEnv('DATABASE_URL'),
 };
 
-export const databaseUrl = getEnv('DATABASE_URL');
 export const jwt = {
   accessSecret: getEnv('JWT_ACCESS_SECRET'),
   accessExpiresIn: getEnv('JWT_ACCESS_EXPIRES_IN'),
@@ -25,4 +25,9 @@ export const jwt = {
 export const redis = {
   host: getEnv('REDIS_HOST'),
   port: getEnvNumber('REDIS_PORT'),
+};
+
+export const admin = {
+  email: getEnv('ADMIN_EMAIL'),
+  password: getEnv('ADMIN_PASSWORD'),
 };
