@@ -70,7 +70,10 @@ export class AuthService {
     );
 
     //  Hash refresh token before storing
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    const hashedRefreshToken = await bcrypt.hash(
+      refreshToken,
+      bcryptSaltRounds,
+    );
 
     // Store in Redis with TTL
     await this.redisService.set(
@@ -128,7 +131,10 @@ export class AuthService {
         },
       );
 
-      const hashedNewRefreshToken = await bcrypt.hash(newRefreshToken, 10);
+      const hashedNewRefreshToken = await bcrypt.hash(
+        newRefreshToken,
+        bcryptSaltRounds,
+      );
 
       await this.redisService.set(
         `refresh_token:${userId}`,
