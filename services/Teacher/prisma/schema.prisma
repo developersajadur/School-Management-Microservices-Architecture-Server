@@ -1,0 +1,55 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ACCOUNTANT
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  DELETED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum TeacherStatus {
+  ACTIVE
+  SUSPENDED
+  RETIRED
+}
+
+model Teacher {
+  id            String   @id @default(uuid())
+  userId        String?   @unique
+  teacherCode   String   @unique
+  firstName     String
+  lastName      String
+  imageUrl      String?
+  gender        Gender
+  joiningDate   DateTime
+  status        TeacherStatus @default(ACTIVE)
+  qualification String?
+  experience    Int?
+  salary        Decimal? @db.Decimal(10, 2)
+  phone         String?
+  email         String? @unique
+  address       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("teachers")
+}

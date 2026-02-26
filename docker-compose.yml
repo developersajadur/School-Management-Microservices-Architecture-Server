@@ -47,7 +47,7 @@ services:
       - "15672:15672"
     networks:
       - school_management_network
-
+ 
   # Redis Cache
   redis:
     image: redis:latest

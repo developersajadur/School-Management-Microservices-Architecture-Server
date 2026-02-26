@@ -5,9 +5,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { StudentModule } from './student/student.module';
 import { RedisModule } from './redis/redis.module';
-import { TeacherModule } from './teacher/teacher.module';
+import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
@@ -17,9 +16,8 @@ import { TeacherModule } from './teacher/teacher.module';
     PrismaModule,
     // UserModule,
     AuthModule,
-    StudentModule,
-    TeacherModule,
     RedisModule,
+    RabbitMQModule,
   ],
   controllers: [AppController],
   providers: [AppService],
